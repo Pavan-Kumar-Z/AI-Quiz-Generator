@@ -9,24 +9,28 @@
 }
 
 :root {
-    /* Color Palette */
-    --primary-color: #667eea;
-    --primary-dark: #5568d3;
-    --primary-light: #818cf8;
-    
-    --secondary-color: #764ba2;
-    --secondary-dark: #5e3a82;
-    
-    --success-color: #10b981;
-    --success-dark: #059669;
-    
+    /* ========================================
+       🎨 Updated Color Palette
+    ======================================== */
+    --primary-color: #2E236C;
+    --primary-dark: #17153B;
+    --primary-light: #433D8B;
+
+    --secondary-color: #C8ACD6;
+    --secondary-dark: #433D8B;
+
+    --success-color: #4ade80; /* green accent for success */
+    --success-dark: #22c55e;
+
     --danger-color: #ef4444;
     --danger-dark: #dc2626;
-    
+
     --warning-color: #f59e0b;
     --info-color: #3b82f6;
-    
-    /* Neutral Colors */
+
+    /* ========================================
+       🩶 Neutral Colors
+    ======================================== */
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -37,30 +41,38 @@
     --gray-700: #374151;
     --gray-800: #1f2937;
     --gray-900: #111827;
-    
-    /* Spacing */
+
+    /* ========================================
+       📏 Spacing
+    ======================================== */
     --spacing-xs: 0.5rem;
     --spacing-sm: 0.75rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
-    
-    /* Border Radius */
+
+    /* ========================================
+       🟪 Border Radius
+    ======================================== */
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
     --radius-2xl: 1.5rem;
-    
-    /* Shadows */
+
+    /* ========================================
+       🌫️ Shadows
+    ======================================== */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    
-    /* Transitions */
+
+    /* ========================================
+       ⚡ Transitions
+    ======================================== */
     --transition-fast: 150ms ease-in-out;
     --transition-base: 250ms ease-in-out;
     --transition-slow: 350ms ease-in-out;
