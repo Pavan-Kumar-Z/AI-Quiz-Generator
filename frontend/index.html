@@ -3,19 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Quiz Generator</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>AI Quiz Generator - Transform Documents into Quizzes</title>
+    
+    <!-- CSS Links -->
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Favicon (optional) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
 </head>
 <body>
+    <!-- Main Container -->
     <div class="container">
-        <header>
-            <h1>🎓 AI Quiz Generator</h1>
-            <p>Project setup complete! ✅</p>
-        </header>
         
-        <div id="status"></div>
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">
+                    <span class="icon">🎓</span>
+                    AI Quiz Generator
+                </h1>
+                <p class="header-subtitle">
+                    Transform your documents into educational quizzes using AI
+                </p>
+            </div>
+        </header>
+
+        <!-- Status Banner (Hidden by default, shown when needed) -->
+        <div id="statusBanner" class="status-banner hidden">
+            <span id="statusIcon" class="status-icon"></span>
+            <span id="statusMessage" class="status-message"></span>
+            <button id="statusClose" class="status-close">&times;</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Left Panel: Settings -->
+            <aside class="settings-panel">
+                <div class="settings-header">
+                    <h2>⚙️ Quiz Settings</h2>
+                    <p class="settings-subtitle">Configure your preferences</p>
+                </div>
+
+                <div class="settings-content">
+                    
+                    <!-- Quiz Mode Selection -->
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="label-icon">📋</span>
+                            Quiz Mode
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="quizMode" value="mcq" checked>
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">
+                                    <strong>Multiple Choice (MCQ)</strong>
+                                    <small>Questions with 4 options</small>
+                                </span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="quizMode" value="qa">
+                                <span class="radio-custom"></span>
+                                <span class="radio-label">
+                                    <strong>Question & Answer (Q&A)</strong>
+                                    <small>Open-ended questions</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Number of Questions -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="numQuestions">
+                            <span class="label-icon">🔢</span>
+                            Number of Questions
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="numQuestions" min="5" max="20" value="10" class="slider">
+                            <div class="slider-value">
+                                <span id="numQuestionsValue">10</span> questions
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Difficulty Level -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="difficulty">
+                            <span class="label-icon">⭐</span>
+                            Difficulty Level
+                        </label>
+                        <select id="difficulty" class="select-dropdown">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="info-box">
+                        <span class="info-icon">💡</span>
+                        <p class="info-text">
+                            <strong>Tip:</strong> Upload clear, well-structured documents for best results!
+                        </p>
+                    </div>
+
+                </div>
+            </aside>
+
+            <!-- Right Panel: Main Workspace -->
+            <section class="workspace">
+                
+                <!-- Instructions (Collapsible) -->
+                <div class="instructions">
+                    <button class="instructions-toggle" id="instructionsToggle">
+                        <span class="toggle-icon">📖</span>
+                        <span class="toggle-text">How to Use This App</span>
+                        <span class="toggle-arrow">▼</span>
+                    </button>
+                    <div class="instructions-content hidden" id="instructionsContent">
+                        <div class="instructions-body">
+                            <h3>Welcome! Follow these simple steps:</h3>
+                            <ol class="steps-list">
+                                <li>
+                                    <strong>📄 Upload Your Document</strong>
+                                    <p>Supported formats: PDF, DOCX, TXT (max 10 MB)</p>
+                                </li>
+                                <li>
+                                    <strong>⚙️ Configure Settings</strong>
+                                    <p>Choose quiz mode, number of questions, and difficulty</p>
+                                </li>
+                                <li>
+                                    <strong>🎯 Generate Quiz</strong>
+                                    <p>Click "Generate Quiz" and wait for AI to process</p>
+                                </li>
+                                <li>
+                                    <strong>📥 Download PDF</strong>
+                                    <p>Save your quiz as a PDF file</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="upload-section">
+                    <h2 class="section-title">
+                        <span class="title-icon">📄</span>
+                        Upload Your Document
+                    </h2>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden>
+                        <div class="upload-content">
+                            <div class="upload-icon">📁</div>
+                            <p class="upload-title">Drag & drop your file here</p>
+                            <p class="upload-subtitle">or</p>
+                            <button class="btn btn-outline" id="browseBtn">Browse Files</button>
+                            <p class="upload-info">Supported: PDF, DOCX, TXT (Max 10 MB)</p>
+                        </div>
+                    </div>
+
+                    <!-- File Info (Hidden until file is uploaded) -->
+                    <div class="file-info hidden" id="fileInfo">
+                        <div class="file-details">
+                            <div class="file-icon">📄</div>
+                            <div class="file-meta">
+                                <p class="file-name" id="fileName">document.pdf</p>
+                                <p class="file-size" id="fileSize">2.5 MB</p>
+                            </div>
+                            <button class="file-remove" id="removeFile" title="Remove file">
+                                <span>✕</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Button Section -->
+                <div class="generate-section">
+                    <button class="btn btn-primary btn-large" id="generateBtn" disabled>
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Generate Quiz</span>
+                    </button>
+                    <p class="generate-note" id="generateNote">Upload a document to begin</p>
+                </div>
+
+                <!-- Progress Section (Hidden until generation starts) -->
+                <div class="progress-section hidden" id="progressSection">
+                    <div class="progress-header">
+                        <h3>⏳ Processing Your Document...</h3>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Initializing...</p>
+                    </div>
+                </div>
+
+                <!-- Quiz Results Section (Hidden until quiz is generated) -->
+                <div class="results-section hidden" id="resultsSection">
+                    <div class="results-header">
+                        <h2 class="section-title">
+                            <span class="title-icon">📝</span>
+                            Generated Quiz
+                        </h2>
+                        <div class="results-actions">
+                            <button class="btn btn-secondary" id="toggleAnswersBtn">
+                                <span>👁️</span> Show Answers
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Content Container -->
+                    <div class="quiz-content" id="quizContent">
+                        <!-- Quiz questions will be dynamically inserted here -->
+                    </div>
+
+                    <!-- Download Section -->
+                    <div class="download-section">
+                        <button class="btn btn-success btn-large" id="downloadBtn">
+                            <span class="btn-icon">📥</span>
+                            <span class="btn-text">Download as PDF</span>
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 AI Quiz Generator | Powered by Microsoft Phi-3</p>
+        </footer>
+
     </div>
-    
+
+    <!-- JavaScript Files -->
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
