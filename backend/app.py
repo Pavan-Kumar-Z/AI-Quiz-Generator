@@ -12,6 +12,7 @@ app.config.from_object(Config)
 # Enable CORS
 CORS(app, origins=Config.CORS_ORIGINS)
 
+
 # Ensure upload folder exists
 os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
 
