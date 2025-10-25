@@ -9,6 +9,7 @@ from docx import Document
 import warnings
 import re
 import os
+from .text_chunker import TextChunker
 
 # Suppress noisy MuPDF warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="fitz")
@@ -225,6 +226,44 @@ class DocumentProcessor:
             return False, f"Document too short: {word_count} words (min {min_words})"
 
         return True, "Text is valid"
+    
+    
+    def process_and_chunk(self, file_path, chunk_size=500, chunk_overlap=100):
+        """
+        Process document and split into chunks
+        
+        Args:
+            file_path (str): Path to document
+            chunk_size (int): Maximum chunk size in tokens
+            chunk_overlap (int): Overlap between chunks
+            
+        Returns:
+            dict: Processing results with chunks
+        """
+        # First, extract text
+        extraction_result = self.process_document(file_path)
+        
+        # Then, chunk the text
+        chunker = TextChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        
+        metadata = {
+            'source_file': file_path,
+            'format': extraction_result['format']
+        }
+        
+        chunks = chunker.chunk_text(extraction_result['text'], metadata=metadata)
+        chunk_stats = chunker.get_chunk_stats(chunks)
+        
+        # Validate chunks
+        is_valid, validation_message = chunker.validate_chunks(chunks)
+        
+        return {
+            'extraction': extraction_result,
+            'chunks': chunks,
+            'chunk_stats': chunk_stats,
+            'chunks_valid': is_valid,
+            'validation_message': validation_message
+        }
 
 
 # ----------------------------------------------------------------------

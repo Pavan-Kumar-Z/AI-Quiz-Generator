@@ -5,6 +5,9 @@ import os
 import json
 from datetime import datetime
 from config import Config
+from utils.document_processor import DocumentProcessor
+chunks_storage = {}
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -109,10 +112,21 @@ def upload_file():
         file.save(filepath)
         
         # Extract text from document
-        from utils.document_processor import DocumentProcessor
+        
+        # Extract text and create chunks
         
         processor = DocumentProcessor()
-        extraction_result = processor.process_document(filepath)
+        
+        # Process document and chunk it
+        processing_result = processor.process_and_chunk(
+            filepath,
+            chunk_size=500,
+            chunk_overlap=100
+        )
+        
+        extraction_result = processing_result['extraction']
+        chunks = processing_result['chunks']
+        chunk_stats = processing_result['chunk_stats']
         
         # Validate extracted text
         is_valid, validation_message = processor.validate_text(extraction_result['text'])
@@ -125,12 +139,27 @@ def upload_file():
                 "error": validation_message
             }), 400
         
+        # Validate chunks
+        if not processing_result['chunks_valid']:
+            os.remove(filepath)
+            return jsonify({
+                "success": False,
+                "error": f"Chunking failed: {processing_result['validation_message']}"
+            }), 400
+        
         extracted_text = extraction_result['text']
         text_preview = processor.get_text_preview(extracted_text, 300)
+
+        # Store chunks for later use in quiz generation
+        chunks_storage[unique_filename] = {
+            'chunks': chunks,
+            'extraction_result': extraction_result,
+            'timestamp': timestamp
+        }
         
         return jsonify({
             "success": True,
-            "message": "File uploaded and processed successfully",
+            "message": "File uploaded, processed, and chunked successfully",
             "data": {
                 "filename": filename,
                 "saved_as": unique_filename,
@@ -146,6 +175,13 @@ def upload_file():
                     "page_count": extraction_result.get('page_count'),
                     "paragraph_count": extraction_result.get('paragraph_count'),
                     "line_count": extraction_result.get('line_count')
+                },
+                "chunking": {
+                    "total_chunks": chunk_stats['total_chunks'],
+                    "total_tokens": chunk_stats['total_tokens'],
+                    "avg_tokens_per_chunk": chunk_stats['avg_tokens_per_chunk'],
+                    "chunk_size_config": 500,
+                    "chunk_overlap_config": 100
                 }
             }
         }), 200

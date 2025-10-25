@@ -171,6 +171,14 @@ async function uploadFile(file) {
             UI.setGenerateButton(true);
             
             console.log('Upload response:', response);
+            
+            // Display chunk information if available
+            if (response.data.chunking) {
+                const chunkInfo = response.data.chunking;
+                console.log(`📊 Document chunked into ${chunkInfo.total_chunks} chunks`);
+                console.log(`📊 Total tokens: ${chunkInfo.total_tokens}`);
+                console.log(`📊 Average tokens per chunk: ${chunkInfo.avg_tokens_per_chunk}`);
+            }
         }
     } catch (error) {
         UI.showStatus(error.message || 'Failed to upload file', 'error');
