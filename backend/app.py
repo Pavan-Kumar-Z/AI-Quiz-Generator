@@ -108,13 +108,29 @@ def upload_file():
         filepath = os.path.join(Config.UPLOAD_FOLDER, unique_filename)
         file.save(filepath)
         
-        # TODO: Extract text from document (Phase 4)
-        # For now, return dummy data
-        extracted_text = "Document text will be extracted here..."
+        # Extract text from document
+        from utils.document_processor import DocumentProcessor
+        
+        processor = DocumentProcessor()
+        extraction_result = processor.process_document(filepath)
+        
+        # Validate extracted text
+        is_valid, validation_message = processor.validate_text(extraction_result['text'])
+        
+        if not is_valid:
+            # Remove invalid file
+            os.remove(filepath)
+            return jsonify({
+                "success": False,
+                "error": validation_message
+            }), 400
+        
+        extracted_text = extraction_result['text']
+        text_preview = processor.get_text_preview(extracted_text, 300)
         
         return jsonify({
             "success": True,
-            "message": "File uploaded successfully",
+            "message": "File uploaded and processed successfully",
             "data": {
                 "filename": filename,
                 "saved_as": unique_filename,
@@ -122,17 +138,28 @@ def upload_file():
                 "size_mb": round(file_size / (1024*1024), 2),
                 "type": filename.rsplit('.', 1)[1].lower(),
                 "upload_time": timestamp,
-                "text_preview": extracted_text[:200] + "..." if len(extracted_text) > 200 else extracted_text,
-                "text_length": len(extracted_text)
+                "text_preview": text_preview,
+                "text_length": len(extracted_text),
+                "word_count": extraction_result['word_count'],
+                "metadata": {
+                    "format": extraction_result['format'],
+                    "page_count": extraction_result.get('page_count'),
+                    "paragraph_count": extraction_result.get('paragraph_count'),
+                    "line_count": extraction_result.get('line_count')
+                }
             }
         }), 200
     
     except Exception as e:
+        # Clean up file if it exists
+        if 'filepath' in locals() and os.path.exists(filepath):
+            os.remove(filepath)
+        
         return jsonify({
             "success": False,
             "error": f"Server error: {str(e)}"
         }), 500
-
+    
 
 @app.route('/generate-quiz', methods=['POST'])
 def generate_quiz():
