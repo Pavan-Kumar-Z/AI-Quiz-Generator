@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>AI Quiz Generator - Transform Documents into Quizzes</title>
-    
+
     <!-- CSS Links -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
+
     <!-- Favicon (optional) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
 </head>
+
 <body>
     <!-- Main Container -->
     <div class="container">
-        
+
         <!-- Header Section -->
         <header class="header">
             <div class="header-content">
@@ -39,7 +42,7 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
-            
+
             <!-- Left Panel: Settings -->
             <aside class="settings-panel">
                 <div class="settings-header">
@@ -48,7 +51,7 @@
                 </div>
 
                 <div class="settings-content">
-                    
+
                     <!-- Quiz Mode Selection -->
                     <div class="setting-group">
                         <label class="setting-label">
@@ -115,7 +118,7 @@
 
             <!-- Right Panel: Main Workspace -->
             <section class="workspace">
-                
+
                 <!-- Instructions (Collapsible) -->
                 <div class="instructions">
                     <button class="instructions-toggle" id="instructionsToggle">
@@ -154,7 +157,7 @@
                         <span class="title-icon">📄</span>
                         Upload Your Document
                     </h2>
-                    
+
                     <div class="upload-area" id="uploadArea">
                         <input type="file" id="fileInput" accept=".pdf,.docx,.txt" hidden>
                         <div class="upload-content">
@@ -215,6 +218,24 @@
                                 <span>👁️</span> Show Answers
                             </button>
                         </div>
+                        <!-- Add this: Quiz Progress Tracker -->
+                        <div class="quiz-progress">
+                            <div class="progress-header">
+                                <span class="progress-text">Question <span id="currentQuestion">1</span> of <span
+                                        id="totalQuestions">10</span></span>
+                                <div class="score-display hidden" id="scoreDisplay">
+                                    Score: <span id="currentScore">0</span>/<span id="totalQuestionsScore">10</span>
+                                </div>
+                            </div>
+                            <div class="progress-bar-small">
+                                <div class="progress-fill-small" id="questionProgressFill"></div>
+                            </div>
+                        </div>
+
+                        <!-- Add this: Restart Quiz Button (after Download Section) -->
+                        <div class="restart-section hidden" id="restartSection">
+                            <button class="btn btn-outline" id="restartBtn">🔄 Restart Quiz</button>
+                        </div>
                     </div>
 
                     <!-- Quiz Content Container -->
@@ -247,4 +268,5 @@
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

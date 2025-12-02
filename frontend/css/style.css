@@ -1171,3 +1171,169 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
 }
+
+
+/* Quiz Interactivity Styles */
+.quiz-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+}
+
+.quiz-question.active {
+    border-color: var(--primary-color);
+}
+
+.quiz-question.inactive {
+    opacity: 0.7;
+}
+
+.quiz-options {
+    margin: 1rem 0;
+}
+
+.quiz-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quiz-option:hover {
+    background: var(--hover-bg);
+}
+
+.quiz-option.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.quiz-option.correct {
+    border-color: var(--success-color);
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+
+.quiz-option.wrong {
+    border-color: var(--error-color);
+    background: var(--error-light);
+    color: var(--error-dark);
+}
+
+.option-radio {
+    margin-right: 0.5rem;
+}
+
+.feedback {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+}
+
+.feedback.success {
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+
+.feedback.error {
+    background: var(--error-light);
+    color: var(--error-dark);
+}
+
+.feedback-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.answer-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    resize: vertical;
+}
+
+.check-btn, .submit-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.quiz-progress {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.progress-bar-small {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-fill-small {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.score-display {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.restart-section {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+/* Variables (add if missing in your CSS) */
+:root {
+    --success-color: #10b981;
+    --success-light: #ecfdf5;
+    --error-color: #ef4444;
+    --error-light: #fef2f2;
+    --primary-color: #3b82f6;
+    --primary-light: #eff6ff;
+    --border-color: #e5e7eb;
+    --card-bg: #f9fafb;
+    --hover-bg: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+}
+
+
+/* Add this to your css/style.css – Ensures answers are initially hidden */
+.answer-hidden {
+    display: none !important;
+}
+
+.answer-hidden.show {
+    display: block !important;
+}
+
+/* Optional: Smooth reveal animation */
+.answer-hidden {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.answer-hidden.show {
+    opacity: 1;
+    max-height: 200px;  /* Adjust based on content */
+}

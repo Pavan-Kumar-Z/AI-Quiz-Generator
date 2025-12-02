@@ -1,5 +1,6 @@
 // ============================================
 // Main Application Logic
+// main.js
 // ============================================
 
 // Application state
@@ -173,11 +174,17 @@ async function uploadFile(file) {
             console.log('Upload response:', response);
             
             // Display chunk information if available
-            if (response.data.chunking) {
-                const chunkInfo = response.data.chunking;
-                console.log(`📊 Document chunked into ${chunkInfo.total_chunks} chunks`);
-                console.log(`📊 Total tokens: ${chunkInfo.total_tokens}`);
-                console.log(`📊 Average tokens per chunk: ${chunkInfo.avg_tokens_per_chunk}`);
+            // Display RAG information if available
+            if (response.data.rag) {
+                const ragInfo = response.data.rag;
+                if (ragInfo.embeddings_generated) {
+                    console.log(`🔍 RAG: Embeddings generated`);
+                    console.log(`🔍 RAG: Index size ${ragInfo.index_size} vectors`);
+                    console.log(`🔍 RAG: Dimension ${ragInfo.embedding_dimension}`);
+                    console.log(`🔍 RAG: Model ${ragInfo.model_name}`);
+                } else {
+                    console.log(`⚠️  RAG: Embeddings not generated`);
+                }
             }
         }
     } catch (error) {
@@ -200,7 +207,7 @@ function removeFile() {
     UI.hideFileInfo();
     UI.setGenerateButton(false);
     UI.hideResults();
-    
+    UI.resetQuiz();  // Reset quiz when file removed
     console.log('File removed');
 }
 
@@ -257,7 +264,10 @@ async function generateQuiz() {
 
             // Show results
             UI.showResults();
+            document.getElementById('restartSection').classList.remove('hidden');
+
             UI.showStatus('Quiz generated successfully!', 'success');
+            // Show restart section after quiz completion
 
             console.log('Quiz data:', response.data);
         }

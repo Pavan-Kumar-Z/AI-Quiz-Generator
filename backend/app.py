@@ -7,6 +7,33 @@ from datetime import datetime
 from config import Config
 from utils.document_processor import DocumentProcessor
 chunks_storage = {}
+# Add these imports at the top
+from utils.rag_pipeline import RAGPipeline
+import threading
+
+# Add global variables for model caching (after chunks_storage)
+_rag_pipeline = None
+_rag_lock = threading.Lock()
+
+def get_rag_pipeline():
+    """
+    Get or create RAG pipeline (singleton pattern with thread safety)
+    
+    Returns:
+        RAGPipeline: Cached RAG pipeline instance
+    """
+    global _rag_pipeline
+    
+    with _rag_lock:
+        if _rag_pipeline is None:
+            print("🔄 Initializing RAG pipeline...")
+            _rag_pipeline = RAGPipeline(model_name='all-MiniLM-L6-v2')
+            _rag_pipeline.load_model()
+            print("✅ RAG pipeline initialized and cached")
+        else:
+            print("♻️  Using cached RAG pipeline")
+    
+    return _rag_pipeline
 
 
 app = Flask(__name__)
@@ -150,12 +177,34 @@ def upload_file():
         extracted_text = extraction_result['text']
         text_preview = processor.get_text_preview(extracted_text, 300)
 
-        # Store chunks for later use in quiz generation
+   
+        # Generate embeddings and create RAG index
+        try:
+            print(f"🔍 Creating RAG index for {unique_filename}...")
+            rag_pipeline = get_rag_pipeline()
+            
+            # Build index for this document's chunks
+            rag_pipeline.build_index(chunks)
+            
+            # Get RAG stats
+            rag_stats = rag_pipeline.get_stats()
+            
+            print(f"✅ RAG index created: {rag_stats['index_size']} vectors")
+            
+        except Exception as e:
+            print(f"⚠️  RAG indexing failed: {str(e)}")
+            # Continue without RAG (graceful degradation)
+            rag_stats = None
+        
+        # Store chunks, embeddings, and RAG pipeline for later use
         chunks_storage[unique_filename] = {
             'chunks': chunks,
             'extraction_result': extraction_result,
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'rag_pipeline': rag_pipeline if rag_stats else None
         }
+
+        
         
         return jsonify({
             "success": True,
@@ -182,6 +231,15 @@ def upload_file():
                     "avg_tokens_per_chunk": chunk_stats['avg_tokens_per_chunk'],
                     "chunk_size_config": 500,
                     "chunk_overlap_config": 100
+                },
+                "rag": {
+                    "embeddings_generated": rag_stats is not None,
+                    "index_size": rag_stats['index_size'] if rag_stats else 0,
+                    "embedding_dimension": rag_stats['embedding_dimension'] if rag_stats else 0,
+                    "model_name": rag_stats['model_name'] if rag_stats else None
+                } if rag_stats else {
+                    "embeddings_generated": False,
+                    "error": "RAG indexing was skipped"
                 }
             }
         }), 200
@@ -199,78 +257,67 @@ def upload_file():
 
 @app.route('/generate-quiz', methods=['POST'])
 def generate_quiz():
-    """
-    Generate quiz from uploaded document
-    
-    Expected JSON data:
-        - filename: Name of uploaded file
-        - quiz_mode: "mcq" or "qa"
-        - num_questions: Number of questions (5-20)
-        - difficulty: "easy", "medium", or "hard"
-    
-    Returns:
-        JSON with generated quiz
-    """
     try:
-        # Get request data
         data = request.get_json()
-        
-        # Validate required fields
         if not data:
-            return jsonify({
-                "success": False,
-                "error": "No data provided"
-            }), 400
-        
+            return jsonify({"success": False, "error": "No JSON data"}), 400
+
         filename = data.get('filename')
-        quiz_mode = data.get('quiz_mode', 'mcq')
-        num_questions = data.get('num_questions', Config.DEFAULT_QUESTIONS)
-        difficulty = data.get('difficulty', 'medium')
-        
-        # Validate inputs
-        if not filename:
-            return jsonify({
-                "success": False,
-                "error": "Filename is required"
-            }), 400
-        
-        if num_questions < Config.MIN_QUESTIONS or num_questions > Config.MAX_QUESTIONS:
-            return jsonify({
-                "success": False,
-                "error": f"Number of questions must be between {Config.MIN_QUESTIONS} and {Config.MAX_QUESTIONS}"
-            }), 400
-        
+        quiz_mode = data.get('quiz_mode', 'mcq').lower()
+        num_questions = int(data.get('num_questions', 5))
+        difficulty = data.get('difficulty', 'medium').lower()
+
+        if not filename or filename not in chunks_storage:
+            return jsonify({"success": False, "error": "File not found"}), 404
+
         if quiz_mode not in ['mcq', 'qa']:
-            return jsonify({
-                "success": False,
-                "error": "Quiz mode must be 'mcq' or 'qa'"
-            }), 400
-        
-        # TODO: Generate quiz using AI (Phase 8)
-        # For now, return dummy quiz data
-        
-        if quiz_mode == 'mcq':
-            quiz_data = generate_dummy_mcq(num_questions)
-        else:
-            quiz_data = generate_dummy_qa(num_questions)
-        
+            return jsonify({"success": False, "error": "quiz_mode must be 'mcq' or 'qa'"}), 400
+
+        if not 1 <= num_questions <= 20:
+            return jsonify({"success": False, "error": "num_questions must be 1-20"}), 400
+
+        if difficulty not in ['easy', 'medium', 'hard']:
+            difficulty = 'medium'
+
+        stored_data = chunks_storage[filename]
+        rag_pipeline = stored_data.get('rag_pipeline')
+        if not rag_pipeline:
+            return jsonify({"success": False, "error": "No RAG index"}), 500
+
+        from utils.quiz_generator import QuizGenerator
+        generator = QuizGenerator()
+
+        if not generator.test_connection():
+            return jsonify({"success": False, "error": "Llama server not running"}), 503
+
+        # Get rich context
+        query = "important concepts definitions facts examples"
+        context = rag_pipeline.retrieve_context(query, k=10, max_tokens=4000)
+
+        result = generator.generate_quiz(
+            context=context,
+            quiz_mode=quiz_mode,
+            num_questions=num_questions,
+            difficulty=difficulty
+        )
+
         return jsonify({
             "success": True,
-            "message": "Quiz generated successfully",
+            "message": f"Generated {len(result['questions'])} questions",
             "data": {
                 "quiz_mode": quiz_mode,
-                "num_questions": num_questions,
+                "num_questions": len(result['questions']),
                 "difficulty": difficulty,
-                "questions": quiz_data,
+                "questions": result['questions'],
                 "generated_at": datetime.now().isoformat()
             }
         }), 200
-    
+
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"Server error: {str(e)}"
-        }), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Failed: {str(e)}"}), 500
+
 
 
 @app.route('/download-pdf', methods=['POST'])
@@ -347,6 +394,89 @@ def generate_dummy_qa(num_questions):
     return questions
 
 
+@app.route('/test-rag', methods=['POST'])
+def test_rag():
+    """
+    Test RAG retrieval with a query
+    
+    Expected JSON data:
+        - filename: Name of uploaded file
+        - query: Search query
+        - k: Number of chunks to retrieve (optional, default 5)
+    
+    Returns:
+        JSON with retrieved chunks
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
+        filename = data.get('filename')
+        query = data.get('query')
+        k = data.get('k', 5)
+        
+        # Validate inputs
+        if not filename or not query:
+            return jsonify({
+                "success": False,
+                "error": "Both filename and query are required"
+            }), 400
+        
+        # Check if file exists in storage
+        if filename not in chunks_storage:
+            return jsonify({
+                "success": False,
+                "error": "File not found in storage. Please upload first."
+            }), 404
+        
+        # Get RAG pipeline for this file
+        stored_data = chunks_storage[filename]
+        rag_pipeline = stored_data.get('rag_pipeline')
+        
+        if not rag_pipeline:
+            return jsonify({
+                "success": False,
+                "error": "RAG pipeline not available for this file"
+            }), 400
+        
+        # Retrieve relevant chunks
+        results = rag_pipeline.retrieve(query, k=k)
+        
+        # Format results for response
+        formatted_results = []
+        for result in results:
+            formatted_results.append({
+                'chunk_id': result['chunk_id'],
+                'text': result['text'],
+                'text_preview': result['text'][:200] + '...' if len(result['text']) > 200 else result['text'],
+                'token_count': result['token_count'],
+                'retrieval_score': result['retrieval_score'],
+                'distance': result['distance'],
+                'rank': result['rank']
+            })
+        
+        return jsonify({
+            "success": True,
+            "message": f"Retrieved {len(formatted_results)} chunks",
+            "data": {
+                "query": query,
+                "k_requested": k,
+                "k_returned": len(formatted_results),
+                "results": formatted_results
+            }
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
+
 # ============== ERROR HANDLERS ==============
 
 @app.errorhandler(404)
@@ -369,6 +499,8 @@ def internal_error(error):
 
 # ============== RUN SERVER ==============
 
+
+
 if __name__ == '__main__':
     print("=" * 50)
     print("AI Quiz Generator API Server")
@@ -378,5 +510,19 @@ if __name__ == '__main__':
     print(f"Max file size: {Config.MAX_FILE_SIZE / (1024*1024):.0f} MB")
     print(f"Allowed extensions: {', '.join(Config.ALLOWED_EXTENSIONS)}")
     print("=" * 50)
+    
+    # Pre-load RAG model to cache it
+    print("\n🚀 Pre-loading RAG model...")
+    try:
+        pipeline = get_rag_pipeline()
+        print(f"✅ Model pre-loaded: {pipeline.model_name}")
+        print(f"   Device: {pipeline.model.device}")
+    except Exception as e:
+        print(f"⚠️  Model pre-loading failed: {str(e)}")
+        print("   Model will be loaded on first request")
+    
+    print("\n" + "=" * 50)
+    print("🎉 Server ready!")
+    print("=" * 50 + "\n")
     
     app.run(debug=True, port=5000, host='0.0.0.0')

@@ -9,10 +9,10 @@ An intelligent quiz generation system with HTML/CSS/JS frontend and Python backe
 ✅ **Phase 3:** Frontend - Complete
 ✅ **Phase 4:** Document Processing - Complete
 ✅ **Phase 5:** Text Chunking - Complete
-⏳ **Phase 6:** RAG Pipeline - Pending
-⏳ **Phase 7:** AI Model Integration - Pending
-⏳ **Phase 8:** Quiz Generation - Pending
-⏳ **Phase 9:** Quiz Display - Pending
+✅ **Phase 6:** RAG Pipeline - Pending
+✅ **Phase 7:** AI Model Integration - Pending
+✅ **Phase 8:** Quiz Generation - Pending
+✅ **Phase 9:** Quiz Display - Pending
 ⏳ **Phase 10:** PDF Export - Pending
 
 ## Features Implemented
